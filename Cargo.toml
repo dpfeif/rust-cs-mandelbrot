@@ -11,3 +11,10 @@ edition = "2021"
     crossbeam = "0.8"
     rayon = "1.5"
     clap = { version = "3.1.0", features = ["derive"] }
+
+[dev-dependencies]
+    criterion = "0.3"
+
+[[bench]]
+    name = "benchmark"
+    harness = false
