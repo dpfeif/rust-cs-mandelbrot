@@ -81,8 +81,9 @@ pub fn render(
     }
 }
 
-/// Same as render, but use rayon
-pub fn rayon_render(
+/// Same as render, but use rayon to parallelize
+/// every pixel computation
+pub fn rayon_pixel_render(
     pixels: &mut [u8],
     bounds: (usize, usize),
     upper_left: Complex<f64>,
@@ -108,14 +109,36 @@ pub fn rayon_render(
         });
 }
 
+/// Same as render, but use rayon to parallelize
+/// computation by band
+/// Added value w.r.t.
+///   - rayon_pixel_render: less overhead
+///   - crossbeam_render: allows stealing between threads,
+///     to balance fast and slow bands
+pub fn rayon_row_render(
+    pixels: &mut [u8],
+    bounds: (usize, usize),
+    upper_left: Complex<f64>,
+    lower_right: Complex<f64>,
+) {
+    assert!(pixels.len() == bounds.0 * bounds.1);
+    let rows: Vec<(usize, &mut [u8])> = pixels.chunks_mut(bounds.0).enumerate().collect();
+    rows.into_par_iter().for_each(|(row_index, row)| {
+        let row_upper_left = pixel_to_point(bounds, (0, row_index), upper_left, lower_right);
+        let row_lower_right =
+            pixel_to_point(bounds, (bounds.0, row_index + 1), upper_left, lower_right);
+        render(row, (bounds.0, 1), row_upper_left, row_lower_right)
+    });
+}
+
 pub fn crossbeam_render(
     pixels: &mut [u8],
     bounds: (usize, usize),
     upper_left: Complex<f64>,
     lower_right: Complex<f64>,
 ) {
-    let threads = 8;
-    let rows_per_band = bounds.1 / threads + 1;
+    let threads = 4;
+    let rows_per_band = (bounds.1 / threads) + 1;
     {
         let bands: Vec<&mut [u8]> = pixels.chunks_mut(rows_per_band * bounds.0).collect();
         crossbeam::scope(|spawner| {

@@ -28,9 +28,10 @@ struct Args {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
 enum Parallelism {
-    SingleThread,
     CrossBeam,
-    Rayon,
+    RayonRow,
+    RayonPixel,
+    SingleThread,
 }
 
 fn main() {
@@ -44,9 +45,10 @@ fn main() {
     let mut pixels = vec![0; bounds.0 * bounds.1];
 
     match args.parallelism {
-        Parallelism::SingleThread => render(&mut pixels, bounds, upper_left, lower_right),
         Parallelism::CrossBeam => crossbeam_render(&mut pixels, bounds, upper_left, lower_right),
-        Parallelism::Rayon => rayon_render(&mut pixels, bounds, upper_left, lower_right),
+        Parallelism::RayonRow => rayon_row_render(&mut pixels, bounds, upper_left, lower_right),
+        Parallelism::RayonPixel => rayon_pixel_render(&mut pixels, bounds, upper_left, lower_right),
+        Parallelism::SingleThread => render(&mut pixels, bounds, upper_left, lower_right),
     }
 
     write_image(&args.file_name, &pixels, bounds).expect("error writing PNG file");
