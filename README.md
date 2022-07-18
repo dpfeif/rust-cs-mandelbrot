@@ -8,3 +8,11 @@ Rust case study for parallel computing, CLI arg parsing with [clap](https://gith
 cargo build --release
 target/release/mandelbrot -h
 ```
+
+## Benchmarking
+
+Using [criterion](https://docs.rs/criterion/latest/criterion/)
+
+```bash
+cargo bench
+```
